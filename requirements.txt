@@ -1,0 +1,3 @@
+requests
+alpha-vantage
+newsapi-python
