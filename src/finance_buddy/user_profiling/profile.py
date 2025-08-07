@@ -1,5 +1,13 @@
 from dataclasses import dataclass, field
 from typing import List
+import datetime
+
+@dataclass
+class Alert:
+    alert_id: str
+    message: str
+    timestamp: str = field(default_factory=lambda: datetime.datetime.utcnow().isoformat())
+    status: str = 'unread' # 'unread' or 'read'
 
 @dataclass
 class FinancialGoal:
@@ -20,3 +28,4 @@ class UserProfile:
     annual_income: float
     financial_goals: List[FinancialGoal] = field(default_factory=list)
     portfolio: List[PortfolioHolding] = field(default_factory=list)
+    alerts: List[Alert] = field(default_factory=list)

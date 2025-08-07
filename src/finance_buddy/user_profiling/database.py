@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Dict, Optional, Any
 from dataclasses import asdict
 
-from .profile import UserProfile, FinancialGoal
+from .profile import UserProfile, FinancialGoal, PortfolioHolding, Alert
+from typing import List
 
 DB_FILE = Path(__file__).parent.parent.parent.parent / 'data' / 'user_profiles.json'
 
@@ -44,11 +45,29 @@ def get_user_profile(user_id: str) -> Optional[UserProfile]:
     db = _load_db()
     user_data = db.get(user_id)
     if user_data:
-        # Reconstruct the dataclass objects
+        # Reconstruct the nested dataclass objects
         goals_data = user_data.pop('financial_goals', [])
-        goals = [FinancialGoal(**g) for g in goals_data]
-        return UserProfile(financial_goals=goals, **user_data)
+        portfolio_data = user_data.pop('portfolio', [])
+        alerts_data = user_data.pop('alerts', [])
+
+        user_data['financial_goals'] = [FinancialGoal(**g) for g in goals_data]
+        user_data['portfolio'] = [PortfolioHolding(**h) for h in portfolio_data]
+        user_data['alerts'] = [Alert(**a) for a in alerts_data]
+
+        return UserProfile(**user_data)
     return None
+
+def get_all_user_profiles() -> List[UserProfile]:
+    """
+    Retrieves all user profiles from the database.
+    """
+    db = _load_db()
+    profiles = []
+    for user_id in db:
+        profile = get_user_profile(user_id)
+        if profile:
+            profiles.append(profile)
+    return profiles
 
 def update_user_profile(user_id: str, updated_data: Dict[str, Any]) -> bool:
     """
@@ -68,3 +87,15 @@ def update_user_profile(user_id: str, updated_data: Dict[str, Any]) -> bool:
     db[user_id] = profile_data
     _save_db(db)
     return True
+
+def add_alert(user_id: str, alert: Alert) -> bool:
+    """Adds an alert to a user's profile."""
+    profile = get_user_profile(user_id)
+    if not profile:
+        return False
+
+    profile.alerts.append(alert)
+
+    # Use asdict to convert the whole profile to a dictionary for saving
+    # This is simpler than manually constructing the dict
+    return update_user_profile(user_id, {'alerts': [asdict(a) for a in profile.alerts]})
