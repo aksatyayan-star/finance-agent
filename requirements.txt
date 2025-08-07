@@ -2,3 +2,5 @@ requests
 alpha-vantage
 newsapi-python
 pandas
+google-cloud-aiplatform
+beautifulsoup4
