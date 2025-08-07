@@ -1,0 +1,36 @@
+steps:
+# 1. Build the container image
+# This step builds the Docker image using the Dockerfile in the current directory.
+# The image is tagged with the commit SHA for versioning.
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}:${COMMIT_SHA}', '.']
+
+# 2. Push the container image to Google Artifact Registry
+# This step pushes the built image to the specified Artifact Registry repository.
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}:${COMMIT_SHA}']
+
+# 3. Deploy the container image to Google Cloud Run
+# This step deploys the new image to the Cloud Run service.
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - '${_SERVICE_NAME}'
+    - '--image=${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}:${COMMIT_SHA}'
+    - '--region=${_REGION}'
+    - '--platform=managed'
+    - '--allow-unauthenticated' # Set to allow public access. Change as needed.
+    - '--quiet' # Suppresses interactive prompts
+
+# This stores the name of the built image, which can be used in other build steps or for auditing.
+images:
+- '${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}:${COMMIT_SHA}'
+
+# Default substitutions that can be overridden at trigger time.
+# This makes the build configuration reusable.
+substitutions:
+  _SERVICE_NAME: 'finance-buddy-agent'
+  _REGION: 'us-central1'
+  _GCR_HOSTNAME: 'us-central1-docker.pkg.dev'

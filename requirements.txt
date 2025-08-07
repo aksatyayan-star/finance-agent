@@ -4,3 +4,5 @@ newsapi-python
 pandas
 google-cloud-aiplatform
 beautifulsoup4
+Flask
+gunicorn
