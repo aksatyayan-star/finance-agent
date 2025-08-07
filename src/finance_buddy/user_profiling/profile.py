@@ -7,9 +7,16 @@ class FinancialGoal:
     target_amount: float
 
 @dataclass
+class PortfolioHolding:
+    ticker_symbol: str
+    quantity: float
+    purchase_price: float
+
+@dataclass
 class UserProfile:
     user_id: str
     risk_tolerance: str  # 'low', 'medium', 'high'
     investment_horizon: int  # in years
     annual_income: float
     financial_goals: List[FinancialGoal] = field(default_factory=list)
+    portfolio: List[PortfolioHolding] = field(default_factory=list)
